@@ -1,16 +1,60 @@
 package main
 
 import (
+	"./account"
+	"./costumer"
 	"fmt"
 )
 
 func main()  {
-	chooseOption()
+	introduce()
 }
 
-func chooseOption() {
-	var operation string
+func introduce(){
+	var option int
 	fmt.Println(`Welcome to the digital bank!`)
+	fmt.Println(`Enter the desired option:`)
+	fmt.Println(`1 - Access my account.`)
+	fmt.Println(`2 - Create a new account.`)
+	fmt.Scan(&option)
+
+	switch option {
+	case 1:
+		login()
+	case 2:
+		signin()
+	}
+}
+
+func login() {
+	var accountNumber string
+	fmt.Println(`Enter your account number:`)
+	fmt.Scan(&accountNumber)
+	account.GetAccount()
+}
+
+func signin() {
+	var name string
+	var cpf string
+	var birthday string
+
+	fmt.Println(`***************Create current costumer***************`)
+	fmt.Println(`Type your name:`)
+	fmt.Scan(&name)
+	fmt.Println(`Type your CPF:`)
+	fmt.Scan(&cpf)
+	fmt.Println(`Type your birthday:`)
+	fmt.Scan(&birthday)
+
+	costumer := costumer.CreateCostumer(name, cpf, birthday)
+	fmt.Println("opa olha o costumer", costumer)
+	accountObj := account.CreateAccount()
+	fmt.Println(accountObj.Number)
+	chooseOption(accountObj.Number)
+}
+
+func chooseOption(accountNumber string) {
+	var operation string
 	fmt.Println(`Choose the banking operation:`)
 	fmt.Println(`1 - Open an account`)
 	fmt.Println(`2 - Print balance`)
@@ -21,34 +65,12 @@ func chooseOption() {
 
 	switch operation {
 	case `1`:
-		accountCreate()
+		account.Deposit(accountNumber)
 	case `2`:
-		deposit()
+		account.Withdraw(accountNumber)
 	case `3`:
-		withdraw()
+		account.Transfer(accountNumber)
 	case `4`:
-		printBalance()
-	case `5`:
-		transfer()
+		account.PrintBalance(accountNumber)
 	}
-}
-
-func accountCreate()  {
-
-}
-
-func deposit() {
-	
-}
-
-func withdraw()  {
-	
-}
-
-func printBalance()  {
-	
-}
-
-func transfer() {
-
 }
