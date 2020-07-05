@@ -47,7 +47,7 @@ func signin() {
 	fmt.Scan(&birthday)
 
 	costumer := costumer.CreateCostumer(name, cpf, birthday)
-	fmt.Println("opa olha o costumer", costumer)
+	fmt.Println(costumer)
 	accountObj := account.CreateAccount()
 	fmt.Println(accountObj.Number)
 	chooseOption(accountObj.Number)

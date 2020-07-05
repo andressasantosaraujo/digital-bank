@@ -3,7 +3,6 @@ package costumer
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -15,51 +14,41 @@ type Costumer struct {
 	Birthday string `json:"birthday"`
 }
 
-func CreateCostumer(name, cpf, birthday string) Costumer {
-	hasCostumer, costumer := getCostumer(cpf)
-	if hasCostumer {
-		fmt.Println("tenho costumer")
-		return costumer
-	} else {
-		fmt.Println("não tenho costumer")
-		newCostumer := new(Costumer)
-		newCostumer.Name = name
-		newCostumer.Cpf = cpf
-		newCostumer.Birthday = birthday
-
-		setCostumer(*newCostumer)
-		return *newCostumer
+func CreateCostumer(name, cpf, birthday string) error {
+	_, err  := getCostumer(cpf)
+	if err != nil {
+		newCostumer := Costumer{name,cpf,birthday}
+		err = setCostumer(newCostumer)
 	}
+	return err
 }
 
-func setCostumer(costumer Costumer) {
-	costumersFile, _ := os.OpenFile(`./files/costumers.txt`, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
-	costumerJson ,_ := json.Marshal(costumer)
-	fmt.Println("criei o costumer")
-	costumersFile.WriteString(string(costumerJson) + "\n")
+func setCostumer(costumer Costumer) error {
+	costumersFile, err := os.OpenFile(`./files/costumers.txt`, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
+	if err == nil {
+		costumerJson , err := json.Marshal(costumer)
+		if err == nil {
+			costumersFile.WriteString(string(costumerJson) + "\n")
+			return nil
+		}
+	}
+	return err
 }
 
-func getCostumer(cpf string) (bool, Costumer){
-	var costumers []Costumer
-	costumersFile,_ := os.Open(`./files/costumers.txt`)
-	costumersReader := bufio.NewReader(costumersFile)
-	for{
-		costumer, err := costumersReader.ReadString('\n')
-		var costumerJson Costumer
-		erro := json.Unmarshal([]byte(strings.TrimSpace(costumer)), &costumerJson)
-		if erro != nil {
-			fmt.Println(erro)
-		}
-		costumers = append(costumers, costumerJson)
-		if err == io.EOF {
-			break
-		}
-	}
-	for _, costumer := range costumers {
-		fmt.Println(costumer)
-		if costumer.Cpf == cpf{
-			return true, costumer
+func getCostumer(cpf string) (Costumer, error){
+	costumersFile, err := os.Open(`./files/costumers.txt`)
+	if costumersFile != nil  {
+		costumersReader := bufio.NewReader(costumersFile)
+		for err != io.EOF {
+			var costumerJson Costumer
+			costumer, err := costumersReader.ReadString('\n')
+			err = json.Unmarshal([]byte(strings.TrimSpace(costumer)), &costumerJson)
+			if err == nil {
+				if costumerJson.Cpf == cpf{
+					return costumerJson, nil
+				}
+			}
 		}
 	}
-	return false, Costumer{}
+	return Costumer{}, err
 }
