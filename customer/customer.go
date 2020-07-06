@@ -1,4 +1,4 @@
-package costumer
+package customer
 
 import (
 	"bufio"
@@ -8,22 +8,22 @@ import (
 	"strings"
 )
 
-type Costumer struct {
+type Customer struct {
 	Name string `json:"name"`
 	Cpf string `json:"cpf"`
 	Birthday string `json:"birthday"`
 }
 
-func CreateCostumer(name, cpf, birthday string) error {
-	_, err  := getCostumer(cpf)
+func CreateCustomer(name, cpf, birthday string) error {
+	_, err  := getCustomer(cpf)
 	if err != nil {
-		newCostumer := Costumer{name,cpf,birthday}
-		err = setCostumer(newCostumer)
+		newCostumer := Customer{name,cpf,birthday}
+		err = setCustomer(newCostumer)
 	}
 	return err
 }
 
-func setCostumer(costumer Costumer) error {
+func setCustomer(costumer Customer) error {
 	costumersFile, err := os.OpenFile(`./files/costumers.txt`, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
 	if err == nil {
 		costumerJson , err := json.Marshal(costumer)
@@ -35,12 +35,12 @@ func setCostumer(costumer Costumer) error {
 	return err
 }
 
-func getCostumer(cpf string) (Costumer, error){
+func getCustomer(cpf string) (Customer, error){
 	costumersFile, err := os.Open(`./files/costumers.txt`)
 	if costumersFile != nil  {
 		costumersReader := bufio.NewReader(costumersFile)
 		for err != io.EOF {
-			var costumerJson Costumer
+			var costumerJson Customer
 			costumer, err := costumersReader.ReadString('\n')
 			err = json.Unmarshal([]byte(strings.TrimSpace(costumer)), &costumerJson)
 			if err == nil {
@@ -50,5 +50,5 @@ func getCostumer(cpf string) (Costumer, error){
 			}
 		}
 	}
-	return Costumer{}, err
+	return Customer{}, err
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"./account"
-	"./costumer"
+	"./customer"
 	"fmt"
 )
 
@@ -30,7 +30,7 @@ func login() {
 	var accountNumber string
 	fmt.Println(`Enter your account number:`)
 	fmt.Scan(&accountNumber)
-	account.GetAccount()
+	account.GetAccount(accountNumber)
 }
 
 func signin() {
@@ -38,7 +38,7 @@ func signin() {
 	var cpf string
 	var birthday string
 
-	fmt.Println(`***************Create current costumer***************`)
+	fmt.Println(`***************Create current customer***************`)
 	fmt.Println(`Type your name:`)
 	fmt.Scan(&name)
 	fmt.Println(`Type your CPF:`)
@@ -46,9 +46,9 @@ func signin() {
 	fmt.Println(`Type your birthday:`)
 	fmt.Scan(&birthday)
 
-	costumer := costumer.CreateCostumer(name, cpf, birthday)
-	fmt.Println(costumer)
-	accountObj := account.CreateAccount()
+	customer := customer.CreateCustomer(name, cpf, birthday)
+	fmt.Println(customer)
+	accountObj, err := account.CreateAccount()
 	fmt.Println(accountObj.Number)
 	chooseOption(accountObj.Number)
 }
