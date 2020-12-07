@@ -16,30 +16,6 @@ type Account struct {
 	Cpf       string  `json:"cpf"`
 }
 
-func getAccount(number string) (Account, error) {
-	var accountJson Account
-	accountFile, err := os.Open(`./files/accounts.txt`)
-	if err != nil {
-		return Account{}, err
-	}
-	accountReader := bufio.NewReader(accountFile)
-	for {
-		account, err := accountReader.ReadString('\n')
-		_ = json.Unmarshal([]byte(strings.TrimSpace(account)), &accountJson)
-
-		if accountJson.Number == number {
-			accountFile.Close()
-			return accountJson, nil
-		}
-		if err == io.EOF {
-			break
-		}
-	}
-	accountFile.Close()
-	err = fmt.Errorf(`Error to get Account`)
-	return Account{}, err
-}
-
 func setAccount(account Account) error {
 	accountFile, err := os.OpenFile(`./files/accounts.txt`, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
 	accountJson, err := json.Marshal(account)
@@ -50,33 +26,91 @@ func setAccount(account Account) error {
 	return nil
 }
 
-func CreateAccount(operation int, cpf string, number string) error {
-	_, err := getAccount(number)
+func CreateAccount(operation int, cpf string, number string) (error, Account) {
+	var newAccount Account
+	err, _ := GetAccount(cpf)
 	if err != nil {
-		newAccount := Account{number, 0, operation, cpf}
+		newAccount = Account{number, 0, operation, cpf}
 		err = setAccount(newAccount)
 	}
-	return err
+	return err, newAccount
 }
 
-func Deposit(accountNumber string) {
+func GetAccount(cpf string) (error, Account) {
+	var accountJson Account
+	accountFile, err := os.Open(`./files/accounts.txt`)
+	if err != nil {
+		return err, Account{}
+	}
+	accountReader := bufio.NewReader(accountFile)
+	for {
+		account, err := accountReader.ReadString('\n')
+		_ = json.Unmarshal([]byte(strings.TrimSpace(account)), &accountJson)
+
+		if accountJson.Cpf == cpf {
+			accountFile.Close()
+			return nil, accountJson
+		}
+		if err == io.EOF {
+			break
+		}
+	}
+	accountFile.Close()
+	err = fmt.Errorf(`Error to get Account`)
+	return err, Account{}
+}
+
+func checkMoney(money float64) (error, float64) {
+	var value float64
+	fmt.Println(`Enter the transaction amount:`)
+	fmt.Scan(&value)
+	if err := fmt.Errorf(`err`); money <= value {
+		return err, 0
+	}
+	return nil, value
+}
+
+func getMoney(account Account, value float64) {
+	account.Money -= value
+}
+func setMoney(account Account, value float64) {
+	account.Money += value
+}
+
+func Deposit(account Account) {
+	fmt.Println(`***************Cash deposit***************`)
+	var value float64
+	fmt.Println(`Enter the transaction amount:`)
+	fmt.Scan(&value)
+	setMoney(account, value)
+}
+
+func Withdraw(account Account) {
 	var value float64
 	fmt.Println(`***************Cash deposit***************`)
-	fmt.Println(`Enter the value to be deposited:`)
-	fmt.Scan(&value)
+	err, value := checkMoney(account.Money)
+	if err != nil {
+		fmt.Println(`Insufficient balance!`)
+	}
+	getMoney(account, value)
 }
 
-func Withdraw(accountNumber string) {
-	fmt.Println(`***************Withdraw money***************`)
-
+func PrintBalance(account Account) {
+	fmt.Println(`***************Print balance***************`)
+	fmt.Println(account.Money)
 }
 
-func PrintBalance(accountNumber string) {
-	fmt.Println(`***************Withdraw money***************`)
-
-}
-
-func Transfer(accountNumber string) {
-	fmt.Println(`***************Transfer money between accounts1***************`)
-
+func Transfer(account Account) {
+	fmt.Println(`***************Transfer money between accounts***************`)
+	var value float64
+	var destinyCPF string
+	err, value := checkMoney(account.Money)
+	if err != nil {
+		fmt.Println(`Insufficient balance!`)
+	}
+	fmt.Println(`Enter the destination account for the transfer:`)
+	fmt.Scan(&destinyCPF)
+	err, destinyAccount := GetAccount(destinyCPF)
+	getMoney(account, value)
+	setMoney(destinyAccount, value)
 }

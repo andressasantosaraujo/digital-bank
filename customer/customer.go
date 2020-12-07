@@ -16,7 +16,7 @@ type Customer struct {
 }
 
 func CreateCustomer(name, cpf, birthday string) error {
-	_, err := getCustomer(cpf)
+	_, err := GetCustomer(cpf)
 	if err != nil {
 		newcustomer := Customer{name, cpf, birthday}
 		err = setCustomer(newcustomer)
@@ -34,7 +34,7 @@ func setCustomer(customer Customer) error {
 	return nil
 }
 
-func getCustomer(cpf string) (Customer, error) {
+func GetCustomer(cpf string) (Customer, error) {
 	var customerJson Customer
 	customerFile, err := os.Open(`./files/customers.txt`)
 	if err != nil {
