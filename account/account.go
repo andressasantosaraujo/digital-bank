@@ -73,8 +73,15 @@ func checkMoney(money float64) (error, float64) {
 func getMoney(account Account, value float64) {
 	account.Money -= value
 }
+
 func setMoney(account Account, value float64) {
-	account.Money += value
+	_, accounts := GetAccounts()
+	for i, _ := range accounts {
+		if account.Cpf == accounts[i].Cpf {
+			accounts[i].Money += value
+		}
+	}
+	_ = SetAccounts(accounts)
 }
 
 func Deposit(account Account) {
@@ -86,8 +93,8 @@ func Deposit(account Account) {
 }
 
 func Withdraw(account Account) {
-	var value float64
 	fmt.Println(`***************Cash deposit***************`)
+	var value float64
 	err, value := checkMoney(account.Money)
 	if err != nil {
 		fmt.Println(`Insufficient balance!`)
@@ -98,6 +105,7 @@ func Withdraw(account Account) {
 func PrintBalance(account Account) {
 	fmt.Println(`***************Print balance***************`)
 	fmt.Println(account.Money)
+
 }
 
 func Transfer(account Account) {
@@ -113,4 +121,55 @@ func Transfer(account Account) {
 	err, destinyAccount := GetAccount(destinyCPF)
 	getMoney(account, value)
 	setMoney(destinyAccount, value)
+}
+
+func GetAccounts() (error, []Account) {
+	var accountJson Account
+	var accounts []Account
+	accountFile, err := os.Open(`./files/accounts.txt`)
+
+	if err != nil {
+		return err, accounts
+	}
+
+	accountReader := bufio.NewReader(accountFile)
+
+	for {
+		account, err := accountReader.ReadString('\n')
+
+		if err == io.EOF {
+			err = fmt.Errorf(`Error to get Account`)
+			break
+		}
+
+		_ = json.Unmarshal([]byte(strings.TrimSpace(account)), &accountJson)
+		accounts = append(accounts, accountJson)
+	}
+	accountFile.Close()
+	return err, accounts
+}
+
+func SetAccounts(accounts []Account) error {
+	err := os.Remove("./files/accounts.txt")
+
+	if err != nil {
+		return err
+	}
+
+	accountFile, err := os.OpenFile(`./files/accounts.txt`, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
+
+	if err != nil {
+		return err
+	}
+
+	for _, account := range accounts {
+		accountJson, err := json.Marshal(account)
+
+		if err != nil {
+			return err
+		}
+
+		accountFile.WriteString(string(accountJson) + "\n")
+	}
+	return nil
 }
