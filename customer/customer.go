@@ -26,11 +26,18 @@ func CreateCustomer(name, cpf, birthday string) error {
 
 func setCustomer(customer Customer) error {
 	customersFile, err := os.OpenFile(`./files/customers.txt`, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+
 	customerJson, err := json.Marshal(customer)
 	if err != nil {
 		return err
 	}
-	customersFile.WriteString(string(customerJson) + "\n")
+	_, err = customersFile.WriteString(string(customerJson) + "\n")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

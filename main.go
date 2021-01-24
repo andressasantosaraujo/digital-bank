@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 
 	"./account"
 	"./customer"
@@ -12,11 +14,12 @@ func main() {
 }
 
 func introduce() {
-	var option int
 	fmt.Println(`Welcome to the digital bank!`)
 	fmt.Println(`Enter the desired option:`)
 	fmt.Println(`0 - Access my account.`)
 	fmt.Println(`1 - Create a new account.`)
+	fmt.Println(`2 - Exit`)
+	var option int
 	fmt.Scan(&option)
 
 	switch option {
@@ -24,61 +27,73 @@ func introduce() {
 		login()
 	case 1:
 		signin()
+	case 2:
+		os.Exit(0)
 	}
 }
 
-func signin() {
-	var name string
-	var cpf string
-	var birthday string
-	var numberAccount string
-	var operation int
-	var accountGot account.Account
+func getStrIO(name string) string {
+	var value string
 
+	fmt.Printf("Enter your %s: ", name)
+
+	scanner := bufio.NewScanner(os.Stdin)
+	if scanner.Scan() {
+		value = scanner.Text()
+
+	}
+	return value
+}
+
+func signin() {
+	var accountGot account.Account
 	fmt.Println(`***************Create customer***************`)
-	fmt.Println(`Type your CPF:`)
-	fmt.Scan(&cpf)
+	cpf := getStrIO("CPF")
+
 	_, err := customer.GetCustomer(cpf)
 	if err == nil {
 		fmt.Println(`Existing user, log in using the login option.`)
 		introduce()
 	}
 
-	fmt.Println(`Type your name:`)
-	fmt.Scan(&name)
-	fmt.Println(`Type your birthday:`)
-	fmt.Scan(&birthday)
-	err = customer.CreateCustomer(name, cpf, birthday)
+	name := getStrIO("name")
+	birthday := getStrIO("birthday")
 
-	if err == nil {
-		fmt.Println(`Type your number account:`)
-		fmt.Scan(&numberAccount)
-		err, accountGot = account.GetAccount(numberAccount)
-		if err == nil {
-			fmt.Println(`Existing account, choose the banking operation:`)
-			chooseOption(accountGot)
-		}
-		fmt.Println(`Type your operation:`)
-		fmt.Scan(&operation)
-		err, accountGot = account.CreateAccount(operation, cpf, numberAccount)
+	err = customer.CreateCustomer(name, cpf, birthday)
+	if err != nil {
+		fmt.Println(err)
+		introduce()
 	}
-	chooseOption(accountGot)
+
+	err, accountGot = account.CreateAccount(cpf)
+	if err != nil {
+		fmt.Println(err)
+		introduce()
+	}
+
+	chooseOption(accountGot.Cpf)
 }
 
 func login() {
-	var cpf string
 	fmt.Println(`***************Log in***************`)
-	fmt.Println(`Type your CPF:`)
-	fmt.Scan(&cpf)
+	cpf := getStrIO("CPF")
+
 	err, account := account.GetAccount(cpf)
 	if err != nil {
 		fmt.Println(`Non-existent user, sign in.`)
-		signin()
+		introduce()
 	}
-	chooseOption(account)
+
+	chooseOption(account.Cpf)
 }
 
-func chooseOption(accountGot account.Account) {
+func handle_error(err error) {
+	if err != nil {
+		introduce()
+	}
+}
+
+func chooseOption(cpf string) {
 	var operation string
 	fmt.Println(`Welcome to the digital bank!`)
 	fmt.Println(`Choose the banking operation:`)
@@ -87,20 +102,27 @@ func chooseOption(accountGot account.Account) {
 	fmt.Println(`2 - Withdraw money`)
 	fmt.Println(`3 - Transfer money`)
 	fmt.Println(`4 - Go back`)
+	fmt.Println(`5 - Exit`)
 	fmt.Scan(&operation)
 
 	switch operation {
 	case `0`:
-		account.PrintBalance(accountGot)
+		err := account.PrintBalance(cpf)
+		handle_error(err)
 	case `1`:
-		account.Deposit(accountGot)
+		err := account.Deposit(cpf)
+		handle_error(err)
 	case `2`:
-		account.Withdraw(accountGot)
+		err := account.Withdraw(cpf)
+		handle_error(err)
 	case `3`:
-		account.Transfer(accountGot)
+		err := account.Transfer(cpf)
+		handle_error(err)
 	case `4`:
 		introduce()
+	case `5`:
+		os.Exit(0)
 	}
 
-	chooseOption(accountGot)
+	chooseOption(cpf)
 }
